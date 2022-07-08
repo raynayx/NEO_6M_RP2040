@@ -5,7 +5,7 @@
 #include <hardware/irq.h>
 
 char neo_gps_UART_buffer[NEO_GPS_UART_BUFFER_SIZE];
-char neo_gps_working_buffer[NEO_GPS_WORKING_BUFFER_SIZE];\
+char neo_gps_working_buffer[NEO_GPS_WORKING_BUFFER_SIZE];
 sNEO_6M_state g;
 volatile char UartReceivedChar;
 

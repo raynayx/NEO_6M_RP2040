@@ -24,7 +24,7 @@ int main()
 	stdio_init_all();
 	
 	NEO_6M_Init(&g,&l,&t,uart0);
-	add_repeating_timer_ms(2000,gps_run_r_cb,NULL,&timer);
+	add_repeating_timer_ms(5000,gps_run_r_cb,NULL,&timer);
 
 	while (1)
 	{
