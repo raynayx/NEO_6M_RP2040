@@ -431,7 +431,7 @@ void uart_rx_cb()
  * 
  * The above solution is normal
  * This receiver however seems to do the conversion but for the quadrant
- * hence just negate the W and S quadrant values
+ * hence I just negate the W and S quadrant values
  */
 float NEO_6M_GpsToDecimalDegrees(float nmeaPos, char quadrant)
 {

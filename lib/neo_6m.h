@@ -1,7 +1,7 @@
 /************************
- * 
- * 
- * 
+ * This is a NEO_6M_GPS receiver library written for the RP2040
+ * This library is based on this:
+ *https://github.com/timagr615/stm32_gps_uart 
  * 
  * 
  * 
