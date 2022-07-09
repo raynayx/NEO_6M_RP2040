@@ -23,6 +23,7 @@ pico_sdk_init()
 add_executable(${MY_TARGET}
    src/main.c
    src/neo_6m.c
+   src/uart_mw.c
 )
 #Enable printing over USB and disable printing over UART
 pico_enable_stdio_usb(${MY_TARGET} 1)

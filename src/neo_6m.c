@@ -4,6 +4,8 @@
 #include <stdlib.h>
 #include <hardware/irq.h>
 
+#include "uart_mw.h"
+
 char neo_gps_UART_buffer[NEO_GPS_UART_BUFFER_SIZE];
 char neo_gps_working_buffer[NEO_GPS_WORKING_BUFFER_SIZE];
 sNEO_6M_state g;
@@ -96,7 +98,7 @@ int NEO_6M_GetLineFromBuffer(sNEO_6M_state *g)
 }
 
 
-void NEO_6M_ParseGPRMC(sTimeDate_t *t,sLocation_t *l)
+void NEO_6M_ParseGPRMC(sNEO_6M_state *g)
 {
 	// eg1. $GPRMC,081836,A,3751.65,S,14507.36,E,000.0,360.0,130998,011.3,E*62
 	// eg2. $GPRMC,225446,A,4916.45,N,12311.12,W,000.5,054.7,191194,020.3,E*68
@@ -109,9 +111,9 @@ void NEO_6M_ParseGPRMC(sTimeDate_t *t,sLocation_t *l)
 	if(strlen(parsePointer) > 0)
 	{
 		Temp = atoi(parsePointer);
-		t->second = Temp % 100;
-		t->minute = (Temp / 100) % 100;
-		t->hour = (Temp / 10000) % 100;
+		g->second = Temp % 100;
+		g->minute = (Temp / 100) % 100;
+		g->hour = (Temp / 10000) % 100;
 	}
 	// Navigation receiver warning A = OK, V = warning
 	parsePointer = strtoke(NULL, ",");
@@ -119,25 +121,25 @@ void NEO_6M_ParseGPRMC(sTimeDate_t *t,sLocation_t *l)
 	parsePointer = strtoke(NULL, ",");
 	if(strlen(parsePointer) > 0)
 	{
-		l->latitude = atof(parsePointer)/100.;
+		g->latitude = atof(parsePointer)/100.;
 	}
 	// Latitude Direction
 	parsePointer = strtoke(NULL, ",");
 	if(strlen(parsePointer) > 0)
 	{
-		l->latitudeDirection = *parsePointer;
+		g->latitudeDirection = *parsePointer;
 	}
 	// Longnitude
 	parsePointer = strtoke(NULL, ",");
 	if(strlen(parsePointer) > 0)
 	{
-		l->longitude = atof(parsePointer)/100.;
+		g->longitude = atof(parsePointer)/100.;
 	}
 	// Longnitude Direction
 	parsePointer = strtoke(NULL, ",");
 	if(strlen(parsePointer) > 0)
 	{
-		l->longitudeDirection = *parsePointer;
+		g->longitudeDirection = *parsePointer;
 	}
 	// Speed over ground, Knots
 	parsePointer = strtoke(NULL, ",");
@@ -148,16 +150,16 @@ void NEO_6M_ParseGPRMC(sTimeDate_t *t,sLocation_t *l)
 	if(strlen(parsePointer) > 0)
 	{
 		Temp = atoi(parsePointer);
-		t->year = Temp % 100;
-		t->month = (Temp / 100) % 100;
-		t->day = (Temp / 10000) % 100;
+		g->year = Temp % 100;
+		g->month = (Temp / 100) % 100;
+		g->day = (Temp / 10000) % 100;
 	}
 }
 
 //
 //	Track Made Good and Ground Speed.
 //
-void NEO_6M_ParseGPVTG(sLocation_t *l)
+void NEO_6M_ParseGPVTG(sNEO_6M_state *g)
 {
 	// eg1. $GPVTG,360.0,T,348.7,M,000.0,N,000.0,K*43
 	// eg2. $GPVTG,054.7,T,034.4,M,005.5,N,010.2,K
@@ -168,28 +170,28 @@ void NEO_6M_ParseGPVTG(sLocation_t *l)
 	parsePointer = strtoke(NULL, ",");
 	if(strlen(parsePointer) > 0)
 		{
-			l->course = atof(parsePointer);
+			g->course = atof(parsePointer);
 		}
 	parsePointer = strtoke(NULL, ",");
 	// Magnetic track made good
 	parsePointer = strtoke(NULL, ",");
 	if(strlen(parsePointer) > 0)
 			{
-				l->magnetic_declination = atof(parsePointer);
+				g->magnetic_declination = atof(parsePointer);
 			}
 	parsePointer = strtoke(NULL, ",");
 	// Ground speed, knots
 	parsePointer = strtoke(NULL, ",");
 	if(strlen(parsePointer) > 0)
 	{
-		l->speed_knots = atof(parsePointer);
+		g->speed_knots = atof(parsePointer);
 	}
 	parsePointer = strtoke(NULL, ",");
 	// Ground speed, Kilometers per hour
 	parsePointer = strtoke(NULL, ",");
 	if(strlen(parsePointer) > 0)
 	{
-		l->speed_km = atof(parsePointer);
+		g->speed_km = atof(parsePointer);
 	}
 }
 
@@ -318,7 +320,7 @@ void NEO_6M_ParseGPGLL(sNEO_6M_state *gps)
 }
 
 
-void NEO_6M_ParseLine(sNEO_6M_state *gps, sLocation_t *l, sTimeDate_t *t)
+void NEO_6M_ParseLine(sNEO_6M_state *gps)
 {
 	//
 	// Nice website with NMEA commuincates description
@@ -328,7 +330,7 @@ void NEO_6M_ParseLine(sNEO_6M_state *gps, sLocation_t *l, sTimeDate_t *t)
 	// Header
 	char* parsePointer = strtoke((char*)neo_gps_working_buffer, ",");
 
-	if(strcmp(parsePointer, "$GPRMC") == 0) NEO_6M_ParseGPRMC(t,l);
+	if(strcmp(parsePointer, "$GPRMC") == 0) NEO_6M_ParseGPRMC(gps);
 	// else if(strcmp(parsePointer, "$GPVTG") == 0) NEO_6M_ParseGPVTG(l);
 	else if(strcmp(parsePointer, "$GPGGA") == 0) NEO_6M_ParseGPGGA(gps);
 	else if(strcmp(parsePointer, "$GPGSA") == 0) NEO_6M_ParseGPGSA(gps);
@@ -345,73 +347,15 @@ uint8_t NEO_6M_FixMode(sNEO_6M_state *gps)
 {
 	return gps->fix_mode;
 }
-void NEO_6M_Task(sNEO_6M_state *gps, sLocation_t *l, sTimeDate_t *t)
+void NEO_6M_Task(sNEO_6M_state *gps)
 {
 	if(gps->UartBufferLines)
 	{
 		NEO_6M_GetLineFromBuffer(gps);
-		NEO_6M_ParseLine(gps,l, t);
+		NEO_6M_ParseLine(gps);
 	}
 }
 
-
-void NEO_6M_Init(sNEO_6M_state *gps,sLocation_t *l,sTimeDate_t *t,uart_inst_t *huart)
-{
-	gps->huart = huart;
-	gps->UartBufferHead = 0;
-	gps->UartBufferTail = 0;
-	gps->UartBufferLines = 0;
-	uart_setup(gps->huart,9600,true);
-
-
-	t->second = 0;
-	t->minute = 0;
-	t->hour = 0;
-	t->day = 0;
-	t->month = 0;
-	t->year = 0;
-
-	l->latitude = 0.f;
-	l->latitudeDirection = '0';
-	l->longitude = 0.f;
-	l->longitudeDirection = '0';
-	l->positionValid = 'V';
-
-	l->speed_km = 0;
-	l->speed_knots = 0;
-
-	l->course = 0;
-	l->magnetic_declination = 0;
-
-	gps->satelite_number = 0;
-	gps->quality = 0;
-	gps-> dop = 0;
-	gps->h_dop = 0;
-	gps->v_dop = 0;
-
-	NEO_6M_ReceiveUartChar(gps);
-}
-
-
-void uart_setup(uart_inst_t *u,uint baudrate, bool interrupt_enable)
-{	
-	#ifdef _BOARDS_SEEED_XIAO_RP2040_H
-		uart_init(u,115200);  //init UART 0
-		gpio_set_function(0,GPIO_FUNC_UART); //set GPIO 0 to UART TX found on D6
-		gpio_set_function(1,GPIO_FUNC_UART); //set GPIO 1 to UART RX found on D7
-	#else
-		uart_init(u,baudrate);  //init UART 0
-		gpio_set_function(0,GPIO_FUNC_UART); //set GPIO 0 to UART TX
-		gpio_set_function(1,GPIO_FUNC_UART); //set GPIO 1 to UART RX
-	#endif
-
-	if(interrupt_enable)
-	{
-		irq_set_exclusive_handler(UART0_IRQ,uart_rx_cb);
-		irq_set_enabled(UART0_IRQ,true);
-		uart_set_irq_enables(uart0,true,false);
-	}
-}
 
 void uart_rx_cb()
 {
@@ -420,6 +364,45 @@ void uart_rx_cb()
 		UartReceivedChar = uart_getc(uart0);
 		NEO_6M_ReceiveUartChar(&g);
 	}
+}
+
+
+void NEO_6M_Init(sNEO_6M_state *gps,uart_inst_t *huart)
+{
+	gps->huart = huart;
+	gps->UartBufferHead = 0;
+	gps->UartBufferTail = 0;
+	gps->UartBufferLines = 0;
+
+	uart_setup(gps->huart,9600);
+	uart_irq_setup(gps->huart,UART0_IRQ,uart_rx_cb,true,false);
+
+	gps->second = 0;
+	gps->minute = 0;
+	gps->hour = 0;
+	gps->day = 0;
+	gps->month = 0;
+	gps->year = 0;
+
+	gps->latitude = 0.f;
+	gps->latitudeDirection = '0';
+	gps->longitude = 0.f;
+	gps->longitudeDirection = '0';
+	gps->positionValid = 'V';
+
+	gps->speed_km = 0;
+	gps->speed_knots = 0;
+
+	gps->course = 0;
+	gps->magnetic_declination = 0;
+
+	gps->satelite_number = 0;
+	gps->quality = 0;
+	gps-> dop = 0;
+	gps->h_dop = 0;
+	gps->v_dop = 0;
+
+	NEO_6M_ReceiveUartChar(gps);
 }
 
 

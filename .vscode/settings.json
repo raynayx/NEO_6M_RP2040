@@ -1,6 +1,7 @@
 {
 	"files.associations": {
-		"aht21.h": "c"
+		"aht21.h": "c",
+		"neo_6m.h": "c"
 	},
 	"cortex-debug.variableUseNaturalFormat": true
 }
