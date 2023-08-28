@@ -3,18 +3,20 @@ cmake_minimum_required(VERSION 3.13)
 # initialize the SDK based on PICO_SDK_PATH
 # note: this must happen before project()
 set(PICO_SDK_PATH ~/opt/pico-sdk)
-# set(PICO_BOARD seeed_xiao_rp2040)
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+
 set(CMAKE_BUILD_TYPE Debug)
-#set(LINKER_SCRIPT memmap_mod.ld)
+
+#turn off compiler optimization
+set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -O0")
+set (PICO_DEOPTIMIZED_DEBUG 1)
+set(LINKER_SCRIPT memmap_mod.ld)
 set(MY_TARGET firmware)
 
 
-include(pico_sdk_import.cmake)
+include(${PICO_SDK_PATH}/external/pico_sdk_import.cmake)
 
-project(my_project)
+project(my_project  C CXX ASM)
+
 
 # initialize the Raspberry Pi Pico SDK
 pico_sdk_init()
